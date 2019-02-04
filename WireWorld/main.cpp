@@ -4,6 +4,8 @@
 
 int main()
 {
+	std::cout << "Controls: X = SHOW / HIDE MENU, Y = CHANGE SIMULATION SPEED\n\n";
+
     Game app({640, 480}, "WireWorld");
     
     while(!app.getWindow()->IsDone())

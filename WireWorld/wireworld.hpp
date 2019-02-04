@@ -3,6 +3,14 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
+#include "Engine/toggleKey.hpp"
+
+enum class SimulationState
+{
+	Pause,
+	Running
+};
+
 class WireWorld
 {
 public:
@@ -11,7 +19,7 @@ public:
 
     void HandleInput(sf::RenderWindow& window);
     void Update();
-    void Render(sf::RenderWindow* window);
+    void Render(sf::RenderWindow* window, SimulationState simState);
 
 private:
     enum class STATE
@@ -47,6 +55,16 @@ private:
 
     sf::Vector2i m_QuadCount;
     sf::Vector2u m_screenSize;
+
+	// Pause Screen Drawing Grid
+	sf::RenderTexture m_grid;
+
+	// Type Menu Buttons
+	sf::Sprite m_TypeMenu[3];
+	sf::Texture m_TexMenu;
+	bool m_bDrawMenu;
+
+	ToggleKey m_toggleKey;
 
     // For selecting Cell types in input
     STATE m_type;

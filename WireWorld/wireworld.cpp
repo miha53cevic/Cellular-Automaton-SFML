@@ -1,9 +1,9 @@
 #include "wireworld.hpp"
-#include <iostream>
 
 WireWorld::WireWorld(sf::Vector2u winSize)
-    : m_nBlockSize(8)
-    , m_type(STATE::CONDUCTOR)
+	: m_nBlockSize(8)
+	, m_type(STATE::CONDUCTOR)
+	, m_toggleKey(sf::Keyboard::X)
 {
     m_screenSize = winSize;
     Setup();
@@ -13,14 +13,38 @@ void WireWorld::HandleInput(sf::RenderWindow& window)
 {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
-    // Change Cell Type
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
-        m_type = STATE::CONDUCTOR;
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
-        m_type = STATE::ELECTRON_HEAD;
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-        m_type = STATE::EMPTY;
+	// Show Type Menu or Hide it with X
+	if (m_toggleKey.isKeyPressed())
+	{
+		if (!m_bDrawMenu)
+		{
+			m_bDrawMenu = true;
+		}
+		else m_bDrawMenu = false;
+	}
 
+    // Change Cell Type with Type Menu
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && m_bDrawMenu)
+	{
+		sf::FloatRect MenuButtonC = m_TypeMenu[0].getGlobalBounds();
+		sf::FloatRect MenuButtonE = m_TypeMenu[1].getGlobalBounds();
+		sf::FloatRect MenuButtonX = m_TypeMenu[2].getGlobalBounds();
+
+		if (MenuButtonC.contains(mousePos.x, mousePos.y))
+		{
+			m_type = STATE::CONDUCTOR;
+		}
+		else if (MenuButtonE.contains(mousePos.x, mousePos.y))
+		{
+			m_type = STATE::ELECTRON_HEAD;
+		}
+		else if (MenuButtonX.contains(mousePos.x, mousePos.y))
+		{
+			m_type = STATE::EMPTY;
+		}
+	}
+
+	// Place Cells with Right Mouse Click
     if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
     {
         int x = mousePos.x / m_nBlockSize;
@@ -75,8 +99,25 @@ void WireWorld::Update()
         m_vecOutput = m_vecState;
 }
 
-void WireWorld::Render(sf::RenderWindow* window)
+void WireWorld::Render(sf::RenderWindow* window, SimulationState simState)
 {
+	// If simulation is paused draw grid for easier drawing
+	if (simState == SimulationState::Pause)
+	{
+		sf::Sprite grid(m_grid.getTexture());
+
+		window->draw(grid);
+	}
+
+	// Draw Menu
+	if (m_bDrawMenu)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			window->draw(m_TypeMenu[i]);
+		}
+	}
+
     for (auto &i : m_vecOutput)
     {
         if (i.state == STATE::EMPTY)
@@ -104,6 +145,14 @@ void WireWorld::Render(sf::RenderWindow* window)
 // Private Methods
 void WireWorld::Setup()
 {
+	// Create Grid
+	m_grid.create(m_screenSize.x, m_screenSize.y);
+	m_grid.clear(sf::Color::Black);
+
+	sf::RectangleShape rect;
+	rect.setFillColor(sf::Color(125, 125, 125));
+	rect.setSize(sf::Vector2f(m_nBlockSize - 1, m_nBlockSize - 1));
+
     // Get Number of Quads in X and Y direction
     m_QuadCount.x = m_screenSize.x / m_nBlockSize;
     m_QuadCount.y = m_screenSize.y / m_nBlockSize;
@@ -125,11 +174,35 @@ void WireWorld::Setup()
             temp.Colour(sf::Color::Black);
 
             m_vecOutput.push_back(temp);
+
+
+
+			// Fill in grid
+			rect.setPosition(sf::Vector2f(realX, realY));
+			m_grid.draw(rect);
+			m_grid.display();
         }
     }
 
     // Both output and state are the same
     m_vecState = m_vecOutput;
+
+	// Load Menu Buttons
+	if (!m_TexMenu.loadFromFile("MenuButtons.png")) { /* Error */ }
+
+	m_TypeMenu[0].setTexture(m_TexMenu);
+	m_TypeMenu[1].setTexture(m_TexMenu);
+	m_TypeMenu[2].setTexture(m_TexMenu);
+
+	m_TypeMenu[0].setTextureRect({ 0, 0, 64, 64 });
+	m_TypeMenu[1].setTextureRect({ 64, 0, 64, 64 });
+	m_TypeMenu[2].setTextureRect({ 128, 0, 64, 64 });
+
+	m_TypeMenu[0].setPosition(0, 0);
+	m_TypeMenu[1].setPosition(64, 0);
+	m_TypeMenu[2].setPosition(128, 0);
+
+	m_bDrawMenu = true;
 }
 
 int WireWorld::ElectronHeadNeighbour(int x, int y)

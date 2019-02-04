@@ -1,14 +1,15 @@
 #include "game.h"
 
-Game::Game()
-	: m_wireworld(m_window.getSize())
+#include <iostream>
+
+Game::Game(const sf::Vector2u& l_size, const std::string& l_name)
+	: m_window(l_size, l_name)
+	, m_wireworld(m_window.getSize())
 	, m_toggleKey(sf::Keyboard::Space)
+	, m_speedToggleKey(sf::Keyboard::Y)
 {
-	//Load Default settings && Textures
-}
-Game::Game(const sf::Vector2u& l_size, const std::string& l_name) : m_window(l_size, l_name), m_wireworld(m_window.getSize()), m_toggleKey(sf::Keyboard::Space)
-{
-	m_bRun = true;
+	m_SimulationState = SimulationState::Pause;
+	m_updatesPerSecond = 4.0f;
 }
 Game::~Game() {}
 
@@ -21,6 +22,32 @@ void Game::HandleInput()
 {
 	//input
 	m_wireworld.HandleInput(*m_window.getWindow());
+
+	// Switch SimulationStates
+	if (m_toggleKey.isKeyPressed())
+	{
+		if (m_SimulationState == SimulationState::Running)
+		{
+			m_SimulationState = SimulationState::Pause;
+		}
+		else
+		{
+			m_SimulationState = SimulationState::Running;
+		}
+	}
+
+	// Change Tick Speed
+	if (m_speedToggleKey.isKeyPressed())
+	{
+		std::cout << "Please enter how many updates per minute you would like: ";
+		std::cin >> m_updatesPerSecond;
+
+		// Check so that the value won't crash the program
+		if (m_updatesPerSecond > 60.0f) m_updatesPerSecond = 60.0f;	// V-Sync is enabled in Window Class
+		if (m_updatesPerSecond < 1.0f)  m_updatesPerSecond = 1.0f;	// No point in going any slower
+
+		std::cout << "\n\n";
+	}
 }
 
 void Game::Update()
@@ -28,36 +55,26 @@ void Game::Update()
 	//Event System
 	m_window.Update();
 
-	// Switch States
-	if (m_toggleKey.isKeyPressed())
+	if (m_SimulationState == SimulationState::Running)
 	{
-		if (m_bRun) m_bRun = false;
-		else m_bRun = true;
-	}
-
-	// If running place colour background to black and update else state is PAUSE and colour background is gray
-	if (m_bRun)
-	{
-		float Tick = 1.0f / 4.0f;
+		float Tick = 1.0f / m_updatesPerSecond;
 
 		if (m_elapsed.asSeconds() > Tick)
 		{
-			// Reset Elapsed
+			// Reset Elapsed & run simulation
 			m_elapsed -= m_elapsed;
 
-			m_clearColour = sf::Color::Black;
 			m_wireworld.Update();
 		}
 	}
-	else m_clearColour = sf::Color(125, 125, 125);
 }
 
 void Game::Render()
 {
 	//Draw something
-	m_window.BeginDraw(m_clearColour);
+	m_window.BeginDraw(sf::Color::Black);
 	
-	m_wireworld.Render(m_window.getWindow());
+	m_wireworld.Render(m_window.getWindow(), m_SimulationState);
 
 	m_window.EndDraw();
 }

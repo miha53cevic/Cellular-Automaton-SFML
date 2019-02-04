@@ -7,7 +7,6 @@
 class Game
 {
 public:
-	Game();
 	Game(const sf::Vector2u& l_size, const std::string& l_name);
 	~Game();
 
@@ -24,11 +23,13 @@ private:
 
 	WireWorld m_wireworld;
 
-	bool m_bRun;
-	sf::Color m_clearColour;
-
 	ToggleKey m_toggleKey;
+	ToggleKey m_speedToggleKey;
+
+	float m_updatesPerSecond;
 
 	sf::Clock m_clock;
 	sf::Time m_elapsed;
+
+	SimulationState m_SimulationState;
 };
