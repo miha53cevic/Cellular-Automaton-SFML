@@ -18,9 +18,9 @@ This is a collection of Cellular Automaton I have made in C++ / SFML.
 Brian's brain has 3 cell types: On, Off, and dying. 
 
 Each generation:
-    -On cells go into a dying state
-    -Dying cells go into the off state
-    -Off cells go into an on state, if and only if exactly 2 [Moore's] neighbours are in the On state
+    - On cells go into a dying state
+    - Dying cells go into the off state
+    - Off cells go into an on state, if and only if exactly 2 [Moore's] neighbours are in the On state
 
 ## Langton's Ant
 
